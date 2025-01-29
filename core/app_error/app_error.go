@@ -14,6 +14,7 @@ const (
 	VerifyTokenCode
 	ErrorVerifyTokenEmailCode
 	ErrorSendEmailCode
+	ErrorCategoryExistsCode
 )
 
 var (
@@ -26,4 +27,5 @@ var (
 	VerifyToken           = errors.New("error verify token")
 	ErrorVerifyTokenEmail = errors.New("error verifying email token")
 	ErrorSendEmail        = errors.New("error send email")
+	ErrorCategoryExists   = errors.New("category already exists")
 )

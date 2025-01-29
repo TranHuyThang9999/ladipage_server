@@ -14,6 +14,7 @@ func NewApiRouter(
 	cors *middlewares.MiddlewareCors,
 	user *controllers.UserController,
 	auth *middlewares.MiddlewareJwt,
+	vehicleCategories *controllers.VehicleCategoriesController,
 ) *ApiRouter {
 	engine := gin.New()
 
@@ -36,7 +37,15 @@ func NewApiRouter(
 		authorized.Use(auth.Authorization())
 		{
 			authorized.GET("/profile", user.Profile)
+		}
 
+		vehicleCategoriesGroup := r.Group("/vehicle_categories")
+		{
+			vehicleCategoriesGroup.Use(auth.Authorization())
+			{
+				vehicleCategoriesGroup.POST("/add", vehicleCategories.AddVehicle)
+				vehicleCategoriesGroup.GET("/list", vehicleCategories.ListVehicle)
+			}
 		}
 	}
 

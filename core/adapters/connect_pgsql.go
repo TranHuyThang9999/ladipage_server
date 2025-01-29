@@ -49,6 +49,7 @@ func (p *Pgsql) Connect() error {
 
 	if err := db.AutoMigrate(&domain.Users{},
 		&domain.FileDescriptors{},
+		&domain.VehicleCategory{},
 	); err != nil {
 		return fmt.Errorf("failed to auto migrate schemas: %v", err)
 	}

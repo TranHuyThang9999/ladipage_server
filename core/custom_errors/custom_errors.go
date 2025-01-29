@@ -93,4 +93,11 @@ var (
 		apperror.ErrorSendEmailCode,
 		apperror.ErrorSendEmail.Error(),
 	)
+
+	ErrCategoryExists = NewError(
+		apperror.ErrorCategoryExists,
+		http.StatusConflict,
+		apperror.ErrorCategoryExistsCode,
+		apperror.ErrorCategoryExists.Error(),
+	)
 )

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"ladipage_server/core/adapters"
 	"ladipage_server/core/domain"
 
@@ -84,7 +85,7 @@ func (r *userRepository) GetUserByGoogleUserIDWithLock(ctx context.Context, ggID
 	var user domain.Users
 	err := r.db.DB().WithContext(ctx).Where("google_user_id = ?", ggID).First(&user).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err

@@ -19,7 +19,7 @@ func NewLogger() *Logger {
 }
 
 func (l *Logger) Error(msg string, err error) {
-	l.log.Errorw(msg, "error", err)
+	l.log.Errorw(msg, "error", zap.Error(err))
 }
 
 func (l *Logger) Infof(msg string, args ...interface{}) {
