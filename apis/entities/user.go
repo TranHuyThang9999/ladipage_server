@@ -37,3 +37,8 @@ type GetProfile struct {
 type LoginWithGGRequest struct {
 	Token string `json:"token,omitempty" binding:"required"`
 }
+
+type RequestLogin struct {
+	UserName string `json:"user_name,omitempty" binding:"required"`
+	Password string `json:"password,omitempty" binding:"required"`
+}

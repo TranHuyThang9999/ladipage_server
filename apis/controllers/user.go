@@ -40,9 +40,11 @@ func (u *UserController) Register(ctx *gin.Context) {
 }
 
 func (u *UserController) Login(ctx *gin.Context) {
-	username := ctx.Query("user_name")
-	password := ctx.Query("password")
-	token, err := u.user.Login(ctx, username, password)
+	var req entities.RequestLogin
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	token, err := u.user.Login(ctx, &req)
 	if err != nil {
 		u.reso.Error(ctx, err)
 		return

@@ -91,15 +91,15 @@ func (u *UserService) Register(ctx context.Context, req *entities.CreateUserRequ
 	return nil
 }
 
-func (u *UserService) Login(ctx context.Context, user_name, password string) (*entities.LoginResponse, *customerrors.CustomError) {
-	user, err := u.user.FindByUsername(ctx, user_name)
+func (u *UserService) Login(ctx context.Context, req *entities.RequestLogin) (*entities.LoginResponse, *customerrors.CustomError) {
+	user, err := u.user.FindByUsername(ctx, req.UserName)
 	if err != nil {
 		return nil, customerrors.ErrDB
 	}
 	if user == nil {
 		return nil, customerrors.ErrNotFound
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		return nil, customerrors.ErrNotFound
 	}
