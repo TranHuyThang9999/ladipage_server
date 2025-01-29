@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: redis_container
+    restart: always
+    ports:
+      - "6379:6379"
+
+  golang:
+    image: golang:1.20
+    container_name: golang_container
+    restart: always
+    volumes:
+      - ./app:/go/src/app
+    working_dir: /go/src/app
+    command: ["go", "run", "main.go"]
+
+volumes:
+  postgres_data:
+    driver: local

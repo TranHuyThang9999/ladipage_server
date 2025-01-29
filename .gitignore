@@ -1,0 +1,4 @@
+.vscode
+go.sum
+go.mod
+configs/configs.json
