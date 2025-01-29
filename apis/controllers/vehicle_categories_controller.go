@@ -52,3 +52,29 @@ func (u *VehicleCategoriesController) ListVehicle(ctx *gin.Context) {
 	}
 	u.reso.Response(ctx, vehicles)
 }
+
+func (u *VehicleCategoriesController) UpdateVehicleCategoryByID(ctx *gin.Context) {
+	var req entities.UpdateVehicleCategoriesRequest
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	err := u.vehicle.UpdateVehicleCategoryByID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+	u.reso.UpdatedSuccess(ctx)
+}
+
+func (u *VehicleCategoriesController) DeleteVehicleCategoryByID(ctx *gin.Context) {
+	id, ok := u.base.GetParamTypeNumber(ctx, "id")
+	if !ok {
+		return
+	}
+	err := u.vehicle.DeleteVehicleCategoryByID(ctx, id)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+	u.reso.DeletedSuccess(ctx)
+}

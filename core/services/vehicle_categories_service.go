@@ -56,3 +56,54 @@ func (svc *VehicleCategoriesService) FindAll(ctx context.Context) ([]*domain.Veh
 	}
 	return vehicles, nil
 }
+
+func (svc *VehicleCategoriesService) UpdateVehicleCategoryByID(ctx context.Context, req *entities.UpdateVehicleCategoriesRequest) *customerrors.CustomError {
+	nameVehicle := strings.TrimSpace(req.Name)
+	checkVehicle, err := svc.vehicle.GetVehicleCategoryByID(ctx, req.ID)
+	if err != nil {
+		svc.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	if checkVehicle == nil {
+		svc.logger.Warn("Vehicle category not found")
+		return customerrors.ErrNotFound
+	}
+	vehicleExists, err := svc.vehicle.ExistsByName(ctx, req.ID, nameVehicle)
+	if err != nil {
+		svc.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	if vehicleExists != 0 {
+		svc.logger.Warn("Vehicle category exists with the same name")
+		return customerrors.ErrCategoryExists
+	}
+	err = svc.vehicle.UpdateVehicleCategoryByID(ctx, &domain.VehicleCategory{
+		Model: entities.Model{
+			ID: req.ID,
+		},
+		Name: nameVehicle,
+	})
+	if err != nil {
+		svc.logger.Error("UpdateVehicleCategory Failed", err)
+		return customerrors.ErrDB
+	}
+	return nil
+}
+
+func (svc *VehicleCategoriesService) DeleteVehicleCategoryByID(ctx context.Context, id int64) *customerrors.CustomError {
+	checkVehicle, err := svc.vehicle.GetVehicleCategoryByID(ctx, id)
+	if err != nil {
+		svc.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	if checkVehicle == nil {
+		svc.logger.Warn("Vehicle category not found")
+		return customerrors.ErrNotFound
+	}
+	err = svc.vehicle.DeleteVehicleCategoryByID(ctx, id)
+	if err != nil {
+		svc.logger.Error("DeleteVehicleCategory Failed", err)
+		return customerrors.ErrDB
+	}
+	return nil
+}

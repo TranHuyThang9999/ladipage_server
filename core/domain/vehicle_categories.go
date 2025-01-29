@@ -18,4 +18,6 @@ type RepositoryVehicleCategory interface {
 	DeleteVehicleCategoryByID(ctx context.Context, id int64) error
 	UpdateVehicleCategoryByID(ctx context.Context, vehicleCategory *VehicleCategory) error
 	GetVehicleCategoryByName(ctx context.Context, name string) (*VehicleCategory, error)
+	ExistsByName(ctx context.Context, id int64, newName string) (int64, error)
+	GetVehicleCategoryByID(ctx context.Context, id int64) (*VehicleCategory, error)
 }

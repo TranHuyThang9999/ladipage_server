@@ -1,9 +1,10 @@
 package routers
 
 import (
-	"github.com/gin-gonic/gin"
 	"ladipage_server/apis/controllers"
 	"ladipage_server/apis/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ApiRouter struct {
@@ -45,6 +46,8 @@ func NewApiRouter(
 			{
 				vehicleCategoriesGroup.POST("/add", vehicleCategories.AddVehicle)
 				vehicleCategoriesGroup.GET("/list", vehicleCategories.ListVehicle)
+				vehicleCategoriesGroup.PATCH("/update", vehicleCategories.UpdateVehicleCategoryByID)
+				vehicleCategoriesGroup.DELETE("/delete/:id", vehicleCategories.DeleteVehicleCategoryByID)
 			}
 		}
 	}
