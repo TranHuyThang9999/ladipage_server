@@ -5,6 +5,7 @@ import (
 	"ladipage_server/apis/entities"
 	"ladipage_server/common/logger"
 	"ladipage_server/common/utils"
+	"ladipage_server/core/constant"
 	customerrors "ladipage_server/core/custom_errors"
 	"ladipage_server/core/domain"
 	"strings"
@@ -12,14 +13,17 @@ import (
 
 type VehicleCategoriesService struct {
 	vehicle domain.RepositoryVehicleCategory
+	file    domain.RepositoryFileDescriptors
 	logger  *logger.Logger
 }
 
 func NewVehicleCategoriesService(vehicle domain.RepositoryVehicleCategory,
+	file domain.RepositoryFileDescriptors,
 	logger *logger.Logger) *VehicleCategoriesService {
 	return &VehicleCategoriesService{
 		vehicle: vehicle,
 		logger:  logger,
+		file:    file,
 	}
 }
 func (svc *VehicleCategoriesService) Add(ctx context.Context, req *entities.CreateVehicleCategoriesRequest) *customerrors.CustomError {
@@ -105,5 +109,33 @@ func (svc *VehicleCategoriesService) DeleteVehicleCategoryByID(ctx context.Conte
 		svc.logger.Error("DeleteVehicleCategory Failed", err)
 		return customerrors.ErrDB
 	}
+	return nil
+}
+func (u *VehicleCategoriesService) AddListFileByObjectID(ctx context.Context, req *entities.CreateFilesRequest) *customerrors.CustomError {
+	var listFileAdd []*domain.FileDescriptors
+	checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, req.ObjectID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	if checkVehicle == nil {
+		u.logger.Warn("Vehicle category not found")
+		return customerrors.ErrNotFound
+	}
+	for _, url := range req.Url {
+		listFileAdd = append(listFileAdd, &domain.FileDescriptors{
+			CreatorID:  req.CreatorID,
+			ObjectID:   req.ObjectID,
+			Url:        *url,
+			TypeObject: constant.TypeObjectVehicleCategories,
+		})
+	}
+
+	err = u.file.AddListFileWith(ctx, listFileAdd)
+	if err != nil {
+		u.logger.Error("error add list file", err)
+		return customerrors.ErrDB
+	}
+
 	return nil
 }

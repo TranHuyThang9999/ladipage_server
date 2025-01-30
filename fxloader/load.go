@@ -1,7 +1,6 @@
 package fxloader
 
 import (
-	"go.uber.org/fx"
 	"ladipage_server/apis/controllers"
 	"ladipage_server/apis/middlewares"
 	"ladipage_server/apis/resources"
@@ -10,6 +9,8 @@ import (
 	"ladipage_server/core/adapters"
 	"ladipage_server/core/adapters/repository"
 	"ladipage_server/core/services"
+
+	"go.uber.org/fx"
 )
 
 func Load() []fx.Option {
@@ -39,6 +40,7 @@ func loadAdapter() []fx.Option {
 		fx.Provide(repository.NewRepositoryCache),
 		fx.Provide(repository.NewRepositoryTransaction),
 		fx.Provide(repository.NewVehicleCategoryRepository),
+		fx.Provide(repository.NewRepositoryFileDesc),
 	}
 }
 
@@ -47,6 +49,7 @@ func loadUseCase() []fx.Option {
 		fx.Provide(services.NewJwtService),
 		fx.Provide(services.NewUserService),
 		fx.Provide(services.NewVehicleCategoriesService),
+		fx.Provide(services.NewFileDescriptorsService),
 	}
 }
 
@@ -59,6 +62,7 @@ func loadEngine() []fx.Option {
 		fx.Provide(resources.NewResource),
 		fx.Provide(middlewares.NewMiddlewareJwt),
 		fx.Provide(controllers.NewVehicleCategoriesController),
+		fx.Provide(controllers.NewFileDescController),
 	}
 }
 

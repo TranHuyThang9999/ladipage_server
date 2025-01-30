@@ -16,6 +16,7 @@ func NewApiRouter(
 	user *controllers.UserController,
 	auth *middlewares.MiddlewareJwt,
 	vehicleCategories *controllers.VehicleCategoriesController,
+	fileDescController *controllers.FileDescController,
 ) *ApiRouter {
 	engine := gin.New()
 
@@ -48,6 +49,7 @@ func NewApiRouter(
 				vehicleCategoriesGroup.GET("/list", vehicleCategories.ListVehicle)
 				vehicleCategoriesGroup.PATCH("/update", vehicleCategories.UpdateVehicleCategoryByID)
 				vehicleCategoriesGroup.DELETE("/delete/:id", vehicleCategories.DeleteVehicleCategoryByID)
+				vehicleCategoriesGroup.POST("/file_desc/add_list", vehicleCategories.AddListFileByObjectID)
 			}
 		}
 	}

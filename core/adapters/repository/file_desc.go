@@ -71,3 +71,11 @@ func (f *fileDescRepository) ListByObjectID(ctx context.Context, objectID int64)
 	}
 	return files, nil
 }
+
+func (f *fileDescRepository) AddListFileWith(ctx context.Context, files []*domain.FileDescriptors) error {
+	if err := f.db.DB().WithContext(ctx).Create(files).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

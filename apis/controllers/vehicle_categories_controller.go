@@ -78,3 +78,21 @@ func (u *VehicleCategoriesController) DeleteVehicleCategoryByID(ctx *gin.Context
 	}
 	u.reso.DeletedSuccess(ctx)
 }
+func (u *VehicleCategoriesController) AddListFileByObjectID(ctx *gin.Context) {
+	var req entities.CreateFilesRequest
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	userID, ok := u.base.GetUserID(ctx)
+	if !ok {
+		return
+	}
+	req.CreatorID = userID
+	err := u.vehicle.AddListFileByObjectID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.CreatedSuccess(ctx)
+}
