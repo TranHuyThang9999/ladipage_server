@@ -96,3 +96,31 @@ func (u *VehicleCategoriesController) AddListFileByObjectID(ctx *gin.Context) {
 
 	u.reso.CreatedSuccess(ctx)
 }
+
+func (u *VehicleCategoriesController) DeleteListFileByID(ctx *gin.Context) {
+	var req entities.DeleteFilesRequest
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	err := u.vehicle.DeleteListFileByID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.DeletedSuccess(ctx)
+}
+
+func (u *VehicleCategoriesController) ListFileByObjectID(ctx *gin.Context) {
+	objectID, ok := u.base.GetParamTypeNumber(ctx, "objectID")
+	if !ok {
+		return
+	}
+	listFile, err := u.vehicle.ListFileByObjectID(ctx, objectID)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.Response(ctx, listFile)
+}

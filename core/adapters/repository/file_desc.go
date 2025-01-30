@@ -79,3 +79,12 @@ func (f *fileDescRepository) AddListFileWith(ctx context.Context, files []*domai
 
 	return nil
 }
+
+func (f *fileDescRepository) DeleteListFileByObjectID(ctx context.Context, fileIds []int64) error {
+	if err := f.db.DB().WithContext(ctx).
+		Where("id in (?)", fileIds).
+		Delete(&domain.FileDescriptors{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

@@ -139,3 +139,50 @@ func (u *VehicleCategoriesService) AddListFileByObjectID(ctx context.Context, re
 
 	return nil
 }
+
+func (u *VehicleCategoriesService) DeleteListFileByID(ctx context.Context, req *entities.DeleteFilesRequest) *customerrors.CustomError {
+	checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, req.ObjectID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	if checkVehicle == nil {
+		u.logger.Warn("Vehicle category not found")
+		return customerrors.ErrNotFound
+	}
+
+	err = u.file.DeleteListFileByObjectID(ctx, req.IDs)
+	if err != nil {
+		u.logger.Error("error delete list file", err)
+		return customerrors.ErrDB
+	}
+
+	return nil
+}
+
+func (u *VehicleCategoriesService) ListFileByObjectID(ctx context.Context, objectID int64) ([]*entities.ListFileByObjectID,
+	*customerrors.CustomError) {
+	var listFileByObjectID = make([]*entities.ListFileByObjectID, 0)
+	checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, objectID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+	if checkVehicle == nil {
+		u.logger.Warn("Vehicle category not found")
+		return nil, customerrors.ErrNotFound
+	}
+	listfile, err := u.file.ListByObjectID(ctx, objectID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+	for _, v := range listfile {
+		listFileByObjectID = append(listFileByObjectID, &entities.ListFileByObjectID{
+			ID:       v.ID,
+			ObjectID: v.ObjectID,
+			Url:      v.Url,
+		})
+	}
+	return listFileByObjectID, nil
+}

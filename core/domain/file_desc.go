@@ -27,4 +27,5 @@ type RepositoryFileDescriptors interface {
 	AddWithTransaction(ctx context.Context, db *gorm.DB, file *FileDescriptors) error
 	AddListFileWithTransaction(ctx context.Context, db *gorm.DB, files []*FileDescriptors) error
 	AddListFileWith(ctx context.Context, files []*FileDescriptors) error
+	DeleteListFileByObjectID(ctx context.Context, fileIds []int64) error
 }
