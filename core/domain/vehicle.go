@@ -7,12 +7,13 @@ import (
 
 type Vehicle struct {
 	entities.Model
-	VehicleCategoryID int64  `gorm:"not null;index"`
-	ModelName         string `gorm:"type:varchar(100);not null"`  // Xforce, Xpander...
-	Variant           string `gorm:"type:varchar(50)"`            // Ultimate, Premium, Exceed...
-	VersionYear       int    `gorm:"type:int"`                    // 2024
-	BasePrice         string `json:"base_price,omitempty"`        // 705000000
-	PromotionalPrice  string `json:"promotional_price,omitempty"` // Giá khuyến mãi nếu có
+	VehicleCategoryID int64           `gorm:"not null;index"` // Khóa ngoại
+	VehicleCategory   VehicleCategory `gorm:"foreignKey:VehicleCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ModelName         string          `gorm:"type:varchar(100);not null"`  // Xforce, Xpander...
+	Variant           string          `gorm:"type:varchar(50)"`            // Ultimate, Premium, Exceed...
+	VersionYear       int             `gorm:"type:int"`                    // 2024
+	BasePrice         string          `json:"base_price,omitempty"`        // 705000000
+	PromotionalPrice  string          `json:"promotional_price,omitempty"` // Giá khuyến mãi nếu có
 
 	// Thông số kỹ thuật
 	Color        string `gorm:"type:varchar(30)"` // Màu xe
