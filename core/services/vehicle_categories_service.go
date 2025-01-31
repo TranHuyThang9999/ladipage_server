@@ -52,13 +52,22 @@ func (svc *VehicleCategoriesService) Add(ctx context.Context, req *entities.Crea
 	return nil
 }
 
-func (svc *VehicleCategoriesService) FindAll(ctx context.Context) ([]*domain.VehicleCategory, *customerrors.CustomError) {
+func (svc *VehicleCategoriesService) FindAll(ctx context.Context) ([]*entities.ListVehicleCategories, *customerrors.CustomError) {
+	var list = make([]*entities.ListVehicleCategories, 0)
+
 	vehicles, err := svc.vehicle.ListVehicleCategories(ctx)
 	if err != nil {
 		svc.logger.Error("ListVehicleCategories Failed", err)
 		return nil, customerrors.ErrDB
 	}
-	return vehicles, nil
+	for _, v := range vehicles {
+		list = append(list, &entities.ListVehicleCategories{
+			ID:        v.ID,
+			Name:      v.Name,
+			CreatedAt: v.CreatedAt,
+		})
+	}
+	return list, nil
 }
 
 func (svc *VehicleCategoriesService) UpdateVehicleCategoryByID(ctx context.Context, req *entities.UpdateVehicleCategoriesRequest) *customerrors.CustomError {
