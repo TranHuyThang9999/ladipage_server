@@ -54,6 +54,14 @@ func NewApiRouter(
 				vehicleCategoriesGroup.GET("/file_desc/:objectID", vehicleCategories.ListFileByObjectID)
 			}
 		}
+		vehicleGroup := r.Group("/vehicle")
+		{
+			vehicleGroup.Use(auth.Authorization())
+			{
+				vehicleGroup.POST("/add")
+			}
+		}
+
 	}
 
 	return &ApiRouter{

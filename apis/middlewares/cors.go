@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func (u *MiddlewareCors) CorsAPI() gin.HandlerFunc {
 		ctx.Request = ctx.Request.WithContext(timeoutCtx)
 
 		cors.New(cors.Options{
-			AllowedOrigins:   []string{"http://localhost:3000"},
+			AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001"},
 			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders:   []string{"Origin", "Content-Type", "Accept"},
 			ExposedHeaders:   []string{"Content-Length"},
@@ -35,7 +36,7 @@ func (u *MiddlewareCors) CorsAPI() gin.HandlerFunc {
 		select {
 		case <-timeoutCtx.Done():
 			if errors.Is(timeoutCtx.Err(), context.DeadlineExceeded) {
-				ctx.JSON(408, gin.H{"error": "Request Timeout"})
+				ctx.JSON(http.StatusRequestTimeout, gin.H{"error": "Request Timeout"})
 				ctx.Abort()
 			}
 		default:
