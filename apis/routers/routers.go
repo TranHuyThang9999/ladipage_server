@@ -5,6 +5,7 @@ import (
 	"ladipage_server/apis/middlewares"
 
 	"github.com/gin-gonic/gin"
+	cors "github.com/rs/cors/wrapper/gin"
 )
 
 type ApiRouter struct {
@@ -12,18 +13,18 @@ type ApiRouter struct {
 }
 
 func NewApiRouter(
-	cors *middlewares.MiddlewareCors,
+	//cors *middlewares.MiddlewareCors,
 	user *controllers.UserController,
 	auth *middlewares.MiddlewareJwt,
 	vehicleCategories *controllers.VehicleCategoriesController,
 	fileDescController *controllers.FileDescController,
 ) *ApiRouter {
 	engine := gin.New()
-
+	//engine.Use(cors.CorsAPI())
+	engine.Use(cors.AllowAll())
 	gin.DisableConsoleColor()
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
-	engine.Use(cors.CorsAPI())
 
 	r := engine.RouterGroup.Group("/manager")
 	r.GET("/ping", func(c *gin.Context) {
