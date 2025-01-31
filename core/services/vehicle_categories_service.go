@@ -9,23 +9,29 @@ import (
 	customerrors "ladipage_server/core/custom_errors"
 	"ladipage_server/core/domain"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type VehicleCategoriesService struct {
 	vehicle domain.RepositoryVehicleCategory
 	file    domain.RepositoryFileDescriptors
 	logger  *logger.Logger
+	trans   domain.RepositoryTransactionHelper
 }
 
 func NewVehicleCategoriesService(vehicle domain.RepositoryVehicleCategory,
 	file domain.RepositoryFileDescriptors,
+	trans domain.RepositoryTransactionHelper,
 	logger *logger.Logger) *VehicleCategoriesService {
 	return &VehicleCategoriesService{
 		vehicle: vehicle,
 		logger:  logger,
 		file:    file,
+		trans:   trans,
 	}
 }
+
 func (svc *VehicleCategoriesService) Add(ctx context.Context, req *entities.CreateVehicleCategoriesRequest) *customerrors.CustomError {
 	nameVehicle := strings.TrimSpace(req.Name)
 	vehicle, err := svc.vehicle.GetVehicleCategoryByName(ctx, nameVehicle)
@@ -37,23 +43,50 @@ func (svc *VehicleCategoriesService) Add(ctx context.Context, req *entities.Crea
 		svc.logger.Warn("Vehicle category already exists")
 		return customerrors.ErrCategoryExists
 	}
-	model := &domain.VehicleCategory{
-		Model: entities.Model{
-			ID: utils.GenUUID(),
-		},
-		CreatorID: req.CreatorID,
-		Name:      nameVehicle,
-	}
-	err = svc.vehicle.AddVehicleCategory(ctx, model)
-	if err != nil {
-		svc.logger.Error("AddVehicleCategory Failed", err)
+
+	if err := svc.trans.Transaction(ctx, func(ctx context.Context, db *gorm.DB) error {
+
+		vehicleCategoriesID := utils.GenUUID()
+
+		model := &domain.VehicleCategory{
+			Model: entities.Model{
+				ID: vehicleCategoriesID,
+			},
+			CreatorID: req.CreatorID,
+			Name:      nameVehicle,
+		}
+
+		err = svc.vehicle.AddVehicleCategory(ctx, db, model)
+		if err != nil {
+			svc.logger.Error("AddVehicleCategory Failed", err)
+			return customerrors.ErrDB
+		}
+		var listFile = make([]*domain.FileDescriptors, 0)
+		for _, v := range req.Urls {
+			listFile = append(listFile, &domain.FileDescriptors{
+				Model: &entities.Model{
+					ID: utils.GenUUID(),
+				},
+				CreatorID: req.CreatorID,
+				Url:       v,
+				ObjectID:  vehicleCategoriesID,
+			})
+		}
+		err = svc.file.AddListFileWithTransaction(ctx, db, listFile)
+		if err != nil {
+			return customerrors.ErrDB
+		}
+
+		return nil
+	}); err != nil {
 		return customerrors.ErrDB
 	}
+
 	return nil
 }
 
-func (svc *VehicleCategoriesService) FindAll(ctx context.Context) ([]*entities.ListVehicleCategories, *customerrors.CustomError) {
-	var list = make([]*entities.ListVehicleCategories, 0)
+func (svc *VehicleCategoriesService) FindAll(ctx context.Context) (*entities.ListVehicleCategories, *customerrors.CustomError) {
+	var listVehicleCategories = make([]*entities.VehicleCategories, 0)
 
 	vehicles, err := svc.vehicle.ListVehicleCategories(ctx)
 	if err != nil {
@@ -61,13 +94,16 @@ func (svc *VehicleCategoriesService) FindAll(ctx context.Context) ([]*entities.L
 		return nil, customerrors.ErrDB
 	}
 	for _, v := range vehicles {
-		list = append(list, &entities.ListVehicleCategories{
+		listVehicleCategories = append(listVehicleCategories, &entities.VehicleCategories{
 			ID:        v.ID,
 			Name:      v.Name,
 			CreatedAt: v.CreatedAt,
 		})
 	}
-	return list, nil
+	return &entities.ListVehicleCategories{
+		Total:             len(listVehicleCategories),
+		VehicleCategories: listVehicleCategories,
+	}, nil
 }
 
 func (svc *VehicleCategoriesService) UpdateVehicleCategoryByID(ctx context.Context, req *entities.UpdateVehicleCategoriesRequest) *customerrors.CustomError {

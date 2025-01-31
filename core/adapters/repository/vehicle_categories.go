@@ -20,7 +20,7 @@ func NewVehicleCategoryRepository(db *adapters.Pgsql) domain.RepositoryVehicleCa
 	}
 }
 
-func (v *vehicleCategory) AddVehicleCategory(ctx context.Context, vehicleCategory *domain.VehicleCategory) error {
+func (v *vehicleCategory) AddVehicleCategory(ctx context.Context, db *gorm.DB, vehicleCategory *domain.VehicleCategory) error {
 	result := v.db.DB().Create(vehicleCategory)
 	return result.Error
 }

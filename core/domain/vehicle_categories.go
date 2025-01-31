@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"ladipage_server/apis/entities"
+
+	"gorm.io/gorm"
 )
 
 // Loại xe
@@ -13,7 +15,7 @@ type VehicleCategory struct {
 }
 
 type RepositoryVehicleCategory interface {
-	AddVehicleCategory(ctx context.Context, vehicleCategory *VehicleCategory) error
+	AddVehicleCategory(ctx context.Context, db *gorm.DB, vehicleCategory *VehicleCategory) error
 	ListVehicleCategories(ctx context.Context) ([]*VehicleCategory, error)
 	DeleteVehicleCategoryByID(ctx context.Context, id int64) error
 	UpdateVehicleCategoryByID(ctx context.Context, vehicleCategory *VehicleCategory) error
