@@ -167,8 +167,11 @@ func (u *VehicleCategoriesService) AddListFileByObjectID(ctx context.Context, re
 		u.logger.Warn("Vehicle category not found")
 		return customerrors.ErrNotFound
 	}
-	for _, url := range req.Url {
+	for _, url := range req.Urls {
 		listFileAdd = append(listFileAdd, &domain.FileDescriptors{
+			Model: &entities.Model{
+				ID: utils.GenUUID(),
+			},
 			CreatorID:  req.CreatorID,
 			ObjectID:   req.ObjectID,
 			Url:        *url,

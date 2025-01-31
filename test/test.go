@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"ladipage_server/common/utils"
 	"time"
 )
 
@@ -11,7 +12,7 @@ func FormatTime(req time.Time) string {
 
 // 2025-01-19 07:06:59.534307 +00:00
 func main() {
-	timeNow := time.Now()
-	log.Println("time now : ", timeNow)
-	log.Println("time : ", FormatTime(timeNow))
+	for i := 0; i < 10; i++ {
+		fmt.Println(utils.GenUUID())
+	}
 }

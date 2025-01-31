@@ -10,10 +10,10 @@ import (
 )
 
 func GenUUID() int64 {
-	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	timestamp := time.Now().Unix() % 1e9
+	randomBits, _ := rand.Int(rand.Reader, big.NewInt(1e2)) // Random 2 chữ số (0-99)
 
-	randomBits, _ := rand.Int(rand.Reader, big.NewInt(1<<20)) // 20 bits
-	return (timestamp << 20) | randomBits.Int64()
+	return timestamp*100 + randomBits.Int64()
 }
 
 func GenTime() time.Time {
