@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"ladipage_server/apis/entities"
+
+	"gorm.io/gorm"
 )
 
 type Vehicle struct {
@@ -33,7 +35,7 @@ func (v *Vehicle) TableName() string {
 }
 
 type RepositoryVehicle interface {
-	AddVehicle(ctx context.Context, vehicle *Vehicle) error
+	AddVehicle(ctx context.Context, db *gorm.DB, vehicle *Vehicle) error
 	ListVehicles(ctx context.Context) ([]*Vehicle, error)
 	DeleteVehicleByID(ctx context.Context, id int64) error
 	UpdateVehicleByID(ctx context.Context, vehicle *Vehicle) error

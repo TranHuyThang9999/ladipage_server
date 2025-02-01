@@ -4,21 +4,23 @@ import (
 	"context"
 	"ladipage_server/core/adapters"
 	"ladipage_server/core/domain"
+
+	"gorm.io/gorm"
 )
 
 type vehicleRepository struct {
 	db *adapters.Pgsql
 }
 
-func NewvehicleRepository(db *adapters.Pgsql) domain.RepositoryVehicle {
+func NewVehicleRepository(db *adapters.Pgsql) domain.RepositoryVehicle {
 	return &vehicleRepository{
 		db: db,
 	}
 }
 
 // AddVehicle implements domain.RepositoryVehicle.
-func (v *vehicleRepository) AddVehicle(ctx context.Context, vehicle *domain.Vehicle) error {
-	result := v.db.DB().WithContext(ctx).Create(vehicle)
+func (v *vehicleRepository) AddVehicle(ctx context.Context, db *gorm.DB, vehicle *domain.Vehicle) error {
+	result := db.WithContext(ctx).Create(vehicle)
 	return result.Error
 }
 

@@ -18,6 +18,7 @@ func NewApiRouter(
 	auth *middlewares.MiddlewareJwt,
 	vehicleCategories *controllers.VehicleCategoriesController,
 	fileDescController *controllers.FileDescController,
+	vehicle *controllers.VehicleController,
 ) *ApiRouter {
 	engine := gin.New()
 	//engine.Use(cors.CorsAPI())
@@ -59,7 +60,10 @@ func NewApiRouter(
 		{
 			vehicleGroup.Use(auth.Authorization())
 			{
-				vehicleGroup.POST("/add")
+				vehicleGroup.POST("/add", vehicle.AddVehicle)
+				vehicleGroup.GET("/list", vehicle.GetVehicles)
+				vehicleGroup.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
+
 			}
 		}
 

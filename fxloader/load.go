@@ -41,6 +41,7 @@ func loadAdapter() []fx.Option {
 		fx.Provide(repository.NewRepositoryTransaction),
 		fx.Provide(repository.NewVehicleCategoryRepository),
 		fx.Provide(repository.NewRepositoryFileDesc),
+		fx.Provide(repository.NewVehicleRepository),
 	}
 }
 
@@ -50,6 +51,7 @@ func loadUseCase() []fx.Option {
 		fx.Provide(services.NewUserService),
 		fx.Provide(services.NewVehicleCategoriesService),
 		fx.Provide(services.NewFileDescriptorsService),
+		fx.Provide(services.NewVehicleService),
 	}
 }
 
@@ -63,6 +65,7 @@ func loadEngine() []fx.Option {
 		fx.Provide(middlewares.NewMiddlewareJwt),
 		fx.Provide(controllers.NewVehicleCategoriesController),
 		fx.Provide(controllers.NewFileDescController),
+		fx.Provide(controllers.NewVehicleController),
 	}
 }
 

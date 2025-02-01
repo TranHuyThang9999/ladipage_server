@@ -1,1 +1,156 @@
 package services
+
+import (
+	"context"
+	"errors"
+	"ladipage_server/apis/entities"
+	"ladipage_server/common/logger"
+	"ladipage_server/common/utils"
+	"ladipage_server/core/constant"
+	customerrors "ladipage_server/core/custom_errors"
+	"ladipage_server/core/domain"
+
+	"gorm.io/gorm"
+)
+
+type VehicleService struct {
+	vehicle         domain.RepositoryVehicle
+	file            domain.RepositoryFileDescriptors
+	logger          *logger.Logger
+	trans           domain.RepositoryTransactionHelper
+	vehicleCategory domain.RepositoryVehicleCategory
+}
+
+func NewVehicleService(
+	vehicle domain.RepositoryVehicle,
+	file domain.RepositoryFileDescriptors,
+	trans domain.RepositoryTransactionHelper,
+	vehicleCategory domain.RepositoryVehicleCategory,
+	logger *logger.Logger) *VehicleService {
+	return &VehicleService{
+		vehicle:         vehicle,
+		logger:          logger,
+		file:            file,
+		trans:           trans,
+		vehicleCategory: vehicleCategory,
+	}
+}
+
+func (u *VehicleService) Add(ctx context.Context, req *entities.CreateVehicleRequest) *customerrors.CustomError {
+	vehicleID := utils.GenUUID()
+
+	typeVehicleCategory, err := u.vehicleCategory.GetVehicleCategoryByID(ctx, req.VehicleCategoryID)
+	if err != nil {
+		u.logger.Error("VehicleService - AddVehicle", err)
+		return customerrors.ErrDB
+	}
+
+	if typeVehicleCategory == nil {
+		u.logger.Warn("VehicleService - AddVehicle", errors.New("vehicle category is nil"))
+		return customerrors.ErrNotFound
+	}
+	if err := u.trans.Transaction(ctx, func(ctx context.Context, db *gorm.DB) error {
+		model := &domain.Vehicle{
+			Model: entities.Model{
+				ID: vehicleID,
+			},
+			VehicleCategoryID: req.VehicleCategoryID,
+			ModelName:         req.ModelName,
+			Variant:           req.Variant,
+			VersionYear:       req.VersionYear,
+			BasePrice:         req.BasePrice,
+			PromotionalPrice:  req.PromotionalPrice,
+			Color:             req.Color,
+			Transmission:      req.Transmission,
+			Engine:            req.Engine,
+			FuelType:          req.FuelType,
+			Seating:           req.Seating,
+			Status:            req.Status,
+			Featured:          false,
+			Note:              req.Note,
+		}
+		err := u.vehicle.AddVehicle(ctx, db, model)
+		if err != nil {
+			u.logger.Error("error adding vehicle", err)
+			return err
+		}
+
+		var listFileDesc = make([]*domain.FileDescriptors, 0)
+		for _, v := range req.Urls {
+			listFileDesc = append(listFileDesc, &domain.FileDescriptors{
+				Model: &entities.Model{
+					ID: utils.GenUUID(),
+				},
+				ObjectID:   vehicleID,
+				Url:        *v,
+				TypeObject: constant.TypeObjectVehicle,
+			})
+		}
+		err = u.file.AddListFileWithTransaction(ctx, db, listFileDesc)
+		if err != nil {
+			u.logger.Error("error adding vehicle", err)
+			return err
+		}
+		return nil
+	}); err != nil {
+		return customerrors.ErrDB
+	}
+	return nil
+}
+
+func (u *VehicleService) ListFileByObjectID(ctx context.Context, objectID int64) ([]*entities.ListFileByObjectID,
+	*customerrors.CustomError) {
+	var listFileByObjectID = make([]*entities.ListFileByObjectID, 0)
+	//checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, objectID)
+	//if err != nil {
+	//	u.logger.Error("error database", err)
+	//	return nil, customerrors.ErrDB
+	//}
+	//if checkVehicle == nil {
+	//	u.logger.Warn("Vehicle category not found")
+	//	return nil, customerrors.ErrNotFound
+	//}
+	listfile, err := u.file.ListByObjectID(ctx, objectID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+	for _, v := range listfile {
+		listFileByObjectID = append(listFileByObjectID, &entities.ListFileByObjectID{
+			ID:       v.ID,
+			ObjectID: v.ObjectID,
+			Url:      v.Url,
+		})
+	}
+	return listFileByObjectID, nil
+}
+
+func (u *VehicleService) ListVehicle(ctx context.Context) ([]*entities.GetCreateVehicles, *customerrors.CustomError) {
+	var listVehicle = make([]*entities.GetCreateVehicles, 0)
+
+	resp, err := u.vehicle.ListVehicles(ctx)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+	for _, v := range resp {
+		listVehicle = append(listVehicle, &entities.GetCreateVehicles{
+			ID:                v.ID,
+			VehicleCategoryID: v.VehicleCategoryID,
+			ModelName:         v.ModelName,
+			Variant:           v.Variant,
+			VersionYear:       v.VersionYear,
+			BasePrice:         v.BasePrice,
+			PromotionalPrice:  v.PromotionalPrice,
+			Color:             v.Color,
+			Transmission:      v.Transmission,
+			Engine:            v.Engine,
+			FuelType:          v.FuelType,
+			Seating:           v.Seating,
+			Status:            v.Status,
+			Featured:          false,
+			Note:              v.Note,
+		})
+	}
+	return listVehicle, nil
+}
