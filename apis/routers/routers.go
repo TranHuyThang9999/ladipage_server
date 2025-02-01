@@ -58,15 +58,18 @@ func NewApiRouter(
 		}
 		vehicleGroup := r.Group("/vehicle")
 		{
-			vehicleGroup.Use(auth.Authorization())
+			vehicleGroup.GET("/public/list", vehicle.GetVehicles)
+			vehicleGroup.GET("/public/file_desc/:objectID", vehicle.GetListFileVehicleById)
+
+			authorized := vehicleGroup.Use(auth.Authorization())
 			{
-				vehicleGroup.POST("/add", vehicle.AddVehicle)
-				vehicleGroup.GET("/list", vehicle.GetVehicles)
-				vehicleGroup.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
-				vehicleGroup.PATCH("/update", vehicle.UpdateVehicleById)
-				vehicleGroup.DELETE("/delete/:id", vehicle.DeleteVehicleById)
-				vehicleGroup.POST("/file_desc/add_list", vehicle.AddListFileByObjectID)
-				vehicleGroup.DELETE("/file_desc/delete", vehicle.DeleteListFileByID)
+				authorized.POST("/add", vehicle.AddVehicle)
+				authorized.GET("/list", vehicle.GetVehicles)
+				authorized.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
+				authorized.PATCH("/update", vehicle.UpdateVehicleById)
+				authorized.DELETE("/delete/:id", vehicle.DeleteVehicleById)
+				authorized.POST("/file_desc/add_list", vehicle.AddListFileByObjectID)
+				authorized.DELETE("/file_desc/delete", vehicle.DeleteListFileByID)
 
 			}
 		}

@@ -16,6 +16,7 @@ func NewBaseController() *baseController {
 func (bc *baseController) GetParamTypeNumber(ctx *gin.Context, param string) (int64, bool) {
 	paramValue := ctx.Param(param)
 	if paramValue == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "error request"})
 		return 0, false
 	}
 
