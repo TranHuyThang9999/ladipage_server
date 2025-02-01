@@ -66,3 +66,65 @@ func (u *VehicleController) GetListFileVehicleById(ctx *gin.Context) {
 
 	u.reso.Response(ctx, listFile)
 }
+
+func (u *VehicleController) UpdateVehicleById(ctx *gin.Context) {
+	var req entities.UpdateCreateVehicles
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+
+	err := u.vehicle.UpdateVehicleByID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.UpdatedSuccess(ctx)
+}
+
+func (u *VehicleController) DeleteVehicleById(ctx *gin.Context) {
+	id, ok := u.base.GetParamTypeNumber(ctx, "id")
+	if !ok {
+		return
+	}
+	err := u.vehicle.DeleteVehicleByID(ctx, id)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.DeletedSuccess(ctx)
+}
+
+func (u *VehicleController) AddListFileByObjectID(ctx *gin.Context) {
+	var req entities.CreateFilesRequest
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	userID, ok := u.base.GetUserID(ctx)
+	if !ok {
+		return
+	}
+	req.CreatorID = userID
+	err := u.vehicle.AddListFileByObjectID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.CreatedSuccess(ctx)
+}
+
+func (u *VehicleController) DeleteListFileByID(ctx *gin.Context) {
+	var req entities.DeleteFilesRequest
+	if !u.base.Bind(ctx, &req) {
+		return
+	}
+	err := u.vehicle.DeleteListFileByID(ctx, &req)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.DeletedSuccess(ctx)
+}

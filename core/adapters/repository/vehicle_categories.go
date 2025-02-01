@@ -61,7 +61,7 @@ func (v *vehicleCategory) ExistsByName(ctx context.Context, id int64, newName st
 		Where("LOWER(name) = LOWER(?) AND id != ?", newName, id).
 		First(&existingID)
 
-	if result.Error == gorm.ErrRecordNotFound {
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return 0, nil
 	}
 	if result.Error != nil {
@@ -81,4 +81,10 @@ func (v *vehicleCategory) GetVehicleCategoryByID(ctx context.Context, id int64) 
 		return nil, err
 	}
 	return &vehicleCategory, err
+}
+
+func (r *vehicleCategory) GetVehicleCategoriesByIDs(ctx context.Context, ids []int64) ([]*domain.VehicleCategory, error) {
+	var categories []*domain.VehicleCategory
+	result := r.db.DB().WithContext(ctx).Where("id IN ?", ids).Find(&categories)
+	return categories, result.Error
 }

@@ -48,12 +48,21 @@ func (v *vehicleRepository) GetVehicleByModelName(ctx context.Context, modelName
 // ListVehicles implements domain.RepositoryVehicle.
 func (v *vehicleRepository) ListVehicles(ctx context.Context) ([]*domain.Vehicle, error) {
 	var vehicles = make([]*domain.Vehicle, 0)
-	result := v.db.DB().Find(&vehicles)
+	result := v.db.DB().WithContext(ctx).Find(&vehicles)
 	return vehicles, result.Error
 }
 
 // UpdateVehicleByID implements domain.RepositoryVehicle.
 func (v *vehicleRepository) UpdateVehicleByID(ctx context.Context, vehicle *domain.Vehicle) error {
-	result := v.db.DB().WithContext(ctx).Where("id = ?", vehicle.ID).Updates(vehicle)
+	result := v.db.DB().WithContext(ctx).Save(vehicle)
 	return result.Error
+}
+
+func (v *vehicleRepository) CheckDuplicateVehicle(ctx context.Context, vehicleCategoryID int64, modelName string) (int64, error) {
+	var count int64
+	result := v.db.DB().WithContext(ctx).
+		Model(&domain.Vehicle{}).
+		Where("vehicle_category_id = ? AND model_name = ?", vehicleCategoryID, modelName).
+		Count(&count)
+	return count, result.Error
 }

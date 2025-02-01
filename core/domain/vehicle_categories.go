@@ -22,4 +22,5 @@ type RepositoryVehicleCategory interface {
 	GetVehicleCategoryByName(ctx context.Context, name string) (*VehicleCategory, error)
 	ExistsByName(ctx context.Context, id int64, newName string) (int64, error)
 	GetVehicleCategoryByID(ctx context.Context, id int64) (*VehicleCategory, error)
+	GetVehicleCategoriesByIDs(ctx context.Context, ids []int64) ([]*VehicleCategory, error)
 }

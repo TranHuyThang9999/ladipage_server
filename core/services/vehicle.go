@@ -39,7 +39,7 @@ func NewVehicleService(
 
 func (u *VehicleService) Add(ctx context.Context, req *entities.CreateVehicleRequest) *customerrors.CustomError {
 	vehicleID := utils.GenUUID()
-
+	carName := strings.TrimSpace(req.ModelName)
 	typeVehicleCategory, err := u.vehicleCategory.GetVehicleCategoryByID(ctx, req.VehicleCategoryID)
 	if err != nil {
 		u.logger.Error("VehicleService - AddVehicle", err)
@@ -50,13 +50,24 @@ func (u *VehicleService) Add(ctx context.Context, req *entities.CreateVehicleReq
 		u.logger.Warn("VehicleService - AddVehicle", errors.New("vehicle category is nil"))
 		return customerrors.ErrNotFound
 	}
+
+	count, err := u.vehicle.CheckDuplicateVehicle(ctx, req.VehicleCategoryID, carName)
+	if err != nil {
+		u.logger.Error("VehicleService - AddVehicle", err)
+		return customerrors.ErrDB
+	}
+	if count > 0 {
+		u.logger.Warn("VehicleService - AddVehicle", errors.New("vehicle already exists"))
+		return customerrors.ErrCategoryExists
+	}
+
 	if err := u.trans.Transaction(ctx, func(ctx context.Context, db *gorm.DB) error {
 		model := &domain.Vehicle{
 			Model: entities.Model{
 				ID: vehicleID,
 			},
 			VehicleCategoryID: req.VehicleCategoryID,
-			ModelName:         strings.TrimSpace(req.ModelName),
+			ModelName:         carName,
 			Variant:           req.Variant,
 			VersionYear:       req.VersionYear,
 			BasePrice:         req.BasePrice,
@@ -77,21 +88,24 @@ func (u *VehicleService) Add(ctx context.Context, req *entities.CreateVehicleReq
 		}
 
 		var listFileDesc = make([]*domain.FileDescriptors, 0)
-		for _, v := range req.Urls {
-			listFileDesc = append(listFileDesc, &domain.FileDescriptors{
-				Model: &entities.Model{
-					ID: utils.GenUUID(),
-				},
-				ObjectID:   vehicleID,
-				Url:        *v,
-				TypeObject: constant.TypeObjectVehicle,
-			})
+		if len(req.Urls) > 0 {
+			for _, v := range req.Urls {
+				listFileDesc = append(listFileDesc, &domain.FileDescriptors{
+					Model: &entities.Model{
+						ID: utils.GenUUID(),
+					},
+					ObjectID:   vehicleID,
+					Url:        *v,
+					TypeObject: constant.TypeObjectVehicle,
+				})
+			}
+			err = u.file.AddListFileWithTransaction(ctx, db, listFileDesc)
+			if err != nil {
+				u.logger.Error("error adding vehicle", err)
+				return err
+			}
 		}
-		err = u.file.AddListFileWithTransaction(ctx, db, listFileDesc)
-		if err != nil {
-			u.logger.Error("error adding vehicle", err)
-			return err
-		}
+
 		return nil
 	}); err != nil {
 		return customerrors.ErrDB
@@ -127,39 +141,147 @@ func (u *VehicleService) ListFileByObjectID(ctx context.Context, objectID int64)
 }
 
 func (u *VehicleService) ListVehicle(ctx context.Context) ([]*entities.GetCreateVehicles, *customerrors.CustomError) {
-	var listVehicle = make([]*entities.GetCreateVehicles, 0)
-
 	resp, err := u.vehicle.ListVehicles(ctx)
 	if err != nil {
 		u.logger.Error("error database", err)
 		return nil, customerrors.ErrDB
 	}
-	for _, v := range resp {
-		listVehicle = append(listVehicle, &entities.GetCreateVehicles{
-			ID:                v.ID,
-			VehicleCategoryID: v.VehicleCategoryID,
-			ModelName:         v.ModelName,
-			Variant:           v.Variant,
-			VersionYear:       v.VersionYear,
-			BasePrice:         v.BasePrice,
-			PromotionalPrice:  v.PromotionalPrice,
-			Color:             v.Color,
-			Transmission:      v.Transmission,
-			Engine:            v.Engine,
-			FuelType:          v.FuelType,
-			Seating:           v.Seating,
-			Status:            v.Status,
-			Featured:          false,
-			Note:              v.Note,
-		})
+
+	if len(resp) == 0 {
+		return []*entities.GetCreateVehicles{}, nil
 	}
+
+	categoryIDs := make(map[int64]bool)
+	for _, v := range resp {
+		categoryIDs[v.VehicleCategoryID] = true
+	}
+
+	categoryIDList := make([]int64, 0, len(categoryIDs))
+	for id := range categoryIDs {
+		categoryIDList = append(categoryIDList, id)
+	}
+
+	vehicleCategories, err := u.vehicleCategory.GetVehicleCategoriesByIDs(ctx, categoryIDList)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	categoryMap := make(map[int64]*domain.VehicleCategory)
+	for _, category := range vehicleCategories {
+		categoryMap[category.ID] = category
+	}
+
+	listVehicle := make([]*entities.GetCreateVehicles, 0, len(resp))
+	for _, v := range resp {
+		vehicleCategory, exists := categoryMap[v.VehicleCategoryID]
+		if exists {
+			listVehicle = append(listVehicle, &entities.GetCreateVehicles{
+				ID:               v.ID,
+				VehicleCategory:  vehicleCategory.Name,
+				ModelName:        v.ModelName,
+				Variant:          v.Variant,
+				VersionYear:      v.VersionYear,
+				BasePrice:        v.BasePrice,
+				PromotionalPrice: v.PromotionalPrice,
+				Color:            v.Color,
+				Transmission:     v.Transmission,
+				Engine:           v.Engine,
+				FuelType:         v.FuelType,
+				Seating:          v.Seating,
+				Status:           v.Status,
+				Featured:         false,
+				Note:             v.Note,
+			})
+		}
+	}
+
 	return listVehicle, nil
 }
 
-func (u *VehicleService) UpdateVehicleByID(ctx context.Context, req *entities.GetCreateVehicles) *customerrors.CustomError {
-	err := u.vehicle.UpdateVehicleByID(ctx, &domain.Vehicle{})
+func (u *VehicleService) UpdateVehicleByID(ctx context.Context, req *entities.UpdateCreateVehicles) *customerrors.CustomError {
+	err := u.vehicle.UpdateVehicleByID(ctx, &domain.Vehicle{
+		Model: entities.Model{
+			ID: req.ID,
+		},
+		VehicleCategoryID: req.VehicleCategoryID,
+		ModelName:         req.ModelName,
+		Variant:           req.Variant,
+		VersionYear:       req.VersionYear,
+		BasePrice:         req.BasePrice,
+		PromotionalPrice:  req.PromotionalPrice,
+		Color:             req.Color,
+		Transmission:      req.Transmission,
+		Engine:            req.Engine,
+		FuelType:          req.FuelType,
+		Seating:           req.Seating,
+		Status:            req.Status,
+		Featured:          true,
+		Note:              req.Note,
+	})
 	if err != nil {
 		u.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+
+	return nil
+}
+
+func (u *VehicleService) DeleteVehicleByID(ctx context.Context, id int64) *customerrors.CustomError {
+	err := u.vehicle.DeleteVehicleByID(ctx, id)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+	return nil
+}
+
+func (u *VehicleService) AddListFileByObjectID(ctx context.Context, req *entities.CreateFilesRequest) *customerrors.CustomError {
+	var listFileAdd []*domain.FileDescriptors
+	//checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, req.ObjectID)
+	//if err != nil {
+	//	u.logger.Error("error database", err)
+	//	return customerrors.ErrDB
+	//}
+	//if checkVehicle == nil {
+	//	u.logger.Warn("Vehicle category not found")
+	//	return customerrors.ErrNotFound
+	//}
+	for _, url := range req.Urls {
+		listFileAdd = append(listFileAdd, &domain.FileDescriptors{
+			Model: &entities.Model{
+				ID: utils.GenUUID(),
+			},
+			CreatorID:  req.CreatorID,
+			ObjectID:   req.ObjectID,
+			Url:        *url,
+			TypeObject: constant.TypeObjectVehicle,
+		})
+	}
+
+	err := u.file.AddListFileWith(ctx, listFileAdd)
+	if err != nil {
+		u.logger.Error("error add list file", err)
+		return customerrors.ErrDB
+	}
+
+	return nil
+}
+
+func (u *VehicleService) DeleteListFileByID(ctx context.Context, req *entities.DeleteFilesRequest) *customerrors.CustomError {
+	//checkVehicle, err := u.vehicle.GetVehicleCategoryByID(ctx, req.ObjectID)
+	//if err != nil {
+	//	u.logger.Error("error database", err)
+	//	return customerrors.ErrDB
+	//}
+	//if checkVehicle == nil {
+	//	u.logger.Warn("Vehicle category not found")
+	//	return customerrors.ErrNotFound
+	//}
+
+	err := u.file.DeleteListFileByObjectID(ctx, req.IDs)
+	if err != nil {
+		u.logger.Error("error delete list file", err)
 		return customerrors.ErrDB
 	}
 

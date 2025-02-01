@@ -63,9 +63,10 @@ func NewApiRouter(
 				vehicleGroup.POST("/add", vehicle.AddVehicle)
 				vehicleGroup.GET("/list", vehicle.GetVehicles)
 				vehicleGroup.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
-				// vehicleGroup.PATCH("/update")
-				// vehicleGroup.DELETE("/delete")
-				// vehicleGroup.DELETE("/file_desc/delete")
+				vehicleGroup.PATCH("/update", vehicle.UpdateVehicleById)
+				vehicleGroup.DELETE("/delete/:id", vehicle.DeleteVehicleById)
+				vehicleGroup.POST("/file_desc/add_list", vehicle.AddListFileByObjectID)
+				vehicleGroup.DELETE("/file_desc/delete", vehicle.DeleteListFileByID)
 
 			}
 		}
