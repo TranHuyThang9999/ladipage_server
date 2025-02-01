@@ -62,19 +62,21 @@ func (svc *VehicleCategoriesService) Add(ctx context.Context, req *entities.Crea
 			return customerrors.ErrDB
 		}
 		var listFile = make([]*domain.FileDescriptors, 0)
-		for _, v := range req.Urls {
-			listFile = append(listFile, &domain.FileDescriptors{
-				Model: &entities.Model{
-					ID: utils.GenUUID(),
-				},
-				CreatorID: req.CreatorID,
-				Url:       v,
-				ObjectID:  vehicleCategoriesID,
-			})
-		}
-		err = svc.file.AddListFileWithTransaction(ctx, db, listFile)
-		if err != nil {
-			return customerrors.ErrDB
+		if len(req.Urls) > 0 {
+			for _, v := range req.Urls {
+				listFile = append(listFile, &domain.FileDescriptors{
+					Model: &entities.Model{
+						ID: utils.GenUUID(),
+					},
+					CreatorID: req.CreatorID,
+					Url:       v,
+					ObjectID:  vehicleCategoriesID,
+				})
+			}
+			err = svc.file.AddListFileWithTransaction(ctx, db, listFile)
+			if err != nil {
+				return customerrors.ErrDB
+			}
 		}
 
 		return nil

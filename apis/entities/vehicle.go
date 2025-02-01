@@ -22,7 +22,7 @@ type CreateVehicleRequest struct {
 	Urls     []*string `json:"urls,omitempty"`
 }
 type GetCreateVehicles struct {
-	ID                int64  `json:"id"`
+	ID                int64  `json:"id" binding:"required"`
 	VehicleCategoryID int64  `json:"vehicle_category_id" `        // Khóa ngoại, bắt buộc
 	ModelName         string `json:"model_name,omitempty"`        // Xforce, Xpander...
 	Variant           string `json:"variant,omitempty"`           // Ultimate, Premium, Exceed...

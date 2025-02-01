@@ -9,6 +9,7 @@ import (
 	"ladipage_server/core/constant"
 	customerrors "ladipage_server/core/custom_errors"
 	"ladipage_server/core/domain"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -55,7 +56,7 @@ func (u *VehicleService) Add(ctx context.Context, req *entities.CreateVehicleReq
 				ID: vehicleID,
 			},
 			VehicleCategoryID: req.VehicleCategoryID,
-			ModelName:         req.ModelName,
+			ModelName:         strings.TrimSpace(req.ModelName),
 			Variant:           req.Variant,
 			VersionYear:       req.VersionYear,
 			BasePrice:         req.BasePrice,
@@ -153,4 +154,14 @@ func (u *VehicleService) ListVehicle(ctx context.Context) ([]*entities.GetCreate
 		})
 	}
 	return listVehicle, nil
+}
+
+func (u *VehicleService) UpdateVehicleByID(ctx context.Context, req *entities.GetCreateVehicles) *customerrors.CustomError {
+	err := u.vehicle.UpdateVehicleByID(ctx, &domain.Vehicle{})
+	if err != nil {
+		u.logger.Error("error database", err)
+		return customerrors.ErrDB
+	}
+
+	return nil
 }

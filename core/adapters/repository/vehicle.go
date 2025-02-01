@@ -31,7 +31,8 @@ func (v *vehicleRepository) CheckVehicleExists(ctx context.Context, id int64) (i
 
 // DeleteVehicleByID implements domain.RepositoryVehicle.
 func (v *vehicleRepository) DeleteVehicleByID(ctx context.Context, id int64) error {
-	panic("unimplemented")
+	result := v.db.DB().WithContext(ctx).Delete(&domain.Vehicle{}, id)
+	return result.Error
 }
 
 // GetVehicleByID implements domain.RepositoryVehicle.
@@ -53,5 +54,6 @@ func (v *vehicleRepository) ListVehicles(ctx context.Context) ([]*domain.Vehicle
 
 // UpdateVehicleByID implements domain.RepositoryVehicle.
 func (v *vehicleRepository) UpdateVehicleByID(ctx context.Context, vehicle *domain.Vehicle) error {
-	panic("unimplemented")
+	result := v.db.DB().WithContext(ctx).Where("id = ?", vehicle.ID).Updates(vehicle)
+	return result.Error
 }
