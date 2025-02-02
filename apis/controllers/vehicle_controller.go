@@ -128,3 +128,16 @@ func (u *VehicleController) DeleteListFileByID(ctx *gin.Context) {
 
 	u.reso.DeletedSuccess(ctx)
 }
+
+func (u *VehicleController) GetVehiclesByVehicleCategoryID(ctx *gin.Context) {
+	vehicleCategoryID, ok := u.base.GetParamTypeNumber(ctx, "vehicleCategoryID")
+	if !ok {
+		return
+	}
+	resp, err := u.vehicle.GetVehiclesByVehicleCategoryID(ctx, vehicleCategoryID)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+	u.reso.Response(ctx, resp)
+}

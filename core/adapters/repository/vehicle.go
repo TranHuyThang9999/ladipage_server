@@ -66,3 +66,10 @@ func (v *vehicleRepository) CheckDuplicateVehicle(ctx context.Context, vehicleCa
 		Count(&count)
 	return count, result.Error
 }
+
+func (v *vehicleRepository) GetVehiclesByVehicleCategoryID(ctx context.Context, vehicleCategoryID int64) ([]*domain.Vehicle, error) {
+	var vehicles = make([]*domain.Vehicle, 0)
+	result := v.db.DB().WithContext(ctx).Where("vehicle_category_id = ?", vehicleCategoryID).Find(&vehicles)
+
+	return vehicles, result.Error
+}

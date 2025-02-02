@@ -287,3 +287,65 @@ func (u *VehicleService) DeleteListFileByID(ctx context.Context, req *entities.D
 
 	return nil
 }
+
+func (u *VehicleService) GetVehiclesByVehicleCategoryID(ctx context.Context, vehicleCategoryID int64) ([]*entities.GetCreateVehicles, *customerrors.CustomError) {
+	resp, err := u.vehicle.GetVehiclesByVehicleCategoryID(ctx, vehicleCategoryID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	if len(resp) == 0 {
+		return []*entities.GetCreateVehicles{}, nil
+	}
+	if len(resp) == 0 {
+		return []*entities.GetCreateVehicles{}, nil
+	}
+
+	categoryIDs := make(map[int64]bool)
+	for _, v := range resp {
+		categoryIDs[v.VehicleCategoryID] = true
+	}
+
+	categoryIDList := make([]int64, 0, len(categoryIDs))
+	for id := range categoryIDs {
+		categoryIDList = append(categoryIDList, id)
+	}
+
+	vehicleCategories, err := u.vehicleCategory.GetVehicleCategoriesByIDs(ctx, categoryIDList)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	categoryMap := make(map[int64]*domain.VehicleCategory)
+	for _, category := range vehicleCategories {
+		categoryMap[category.ID] = category
+	}
+
+	listVehicle := make([]*entities.GetCreateVehicles, 0, len(resp))
+	for _, v := range resp {
+		vehicleCategory, exists := categoryMap[v.VehicleCategoryID]
+		if exists {
+			listVehicle = append(listVehicle, &entities.GetCreateVehicles{
+				ID:               v.ID,
+				VehicleCategory:  vehicleCategory.Name,
+				ModelName:        v.ModelName,
+				Variant:          v.Variant,
+				VersionYear:      v.VersionYear,
+				BasePrice:        v.BasePrice,
+				PromotionalPrice: v.PromotionalPrice,
+				Color:            v.Color,
+				Transmission:     v.Transmission,
+				Engine:           v.Engine,
+				FuelType:         v.FuelType,
+				Seating:          v.Seating,
+				Status:           v.Status,
+				Featured:         false,
+				Note:             v.Note,
+			})
+		}
+	}
+
+	return listVehicle, nil
+}

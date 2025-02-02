@@ -60,16 +60,16 @@ func NewApiRouter(
 		{
 			vehicleGroup.GET("/public/list", vehicle.GetVehicles)
 			vehicleGroup.GET("/public/file_desc/:objectID", vehicle.GetListFileVehicleById)
-
-			authorized := vehicleGroup.Use(auth.Authorization())
+			vehicleGroup.GET("/public/list/vehicle/:vehicleCategoryID", vehicle.GetVehiclesByVehicleCategoryID)
+			authorizedVehicle := vehicleGroup.Use(auth.Authorization())
 			{
-				authorized.POST("/add", vehicle.AddVehicle)
-				authorized.GET("/list", vehicle.GetVehicles)
-				authorized.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
-				authorized.PATCH("/update", vehicle.UpdateVehicleById)
-				authorized.DELETE("/delete/:id", vehicle.DeleteVehicleById)
-				authorized.POST("/file_desc/add_list", vehicle.AddListFileByObjectID)
-				authorized.DELETE("/file_desc/delete", vehicle.DeleteListFileByID)
+				authorizedVehicle.POST("/add", vehicle.AddVehicle)
+				authorizedVehicle.GET("/list", vehicle.GetVehicles)
+				authorizedVehicle.GET("/file_desc/:objectID", vehicle.GetListFileVehicleById)
+				authorizedVehicle.PATCH("/update", vehicle.UpdateVehicleById)
+				authorizedVehicle.DELETE("/delete/:id", vehicle.DeleteVehicleById)
+				authorizedVehicle.POST("/file_desc/add_list", vehicle.AddListFileByObjectID)
+				authorizedVehicle.DELETE("/file_desc/delete", vehicle.DeleteListFileByID)
 
 			}
 		}
