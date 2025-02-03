@@ -45,22 +45,23 @@ func NewApiRouter(
 
 		vehicleCategoriesGroup := r.Group("/vehicle_categories")
 		{
-			vehicleCategoriesGroup.Use(auth.Authorization())
+			vehicleCategoriesGroup.GET("/public/list", vehicleCategories.ListVehicle)
+			authorizedVehicleCategories := vehicleCategoriesGroup.Use(auth.Authorization())
 			{
-				vehicleCategoriesGroup.POST("/add", vehicleCategories.AddVehicle)
-				vehicleCategoriesGroup.GET("/list", vehicleCategories.ListVehicle)
-				vehicleCategoriesGroup.PATCH("/update", vehicleCategories.UpdateVehicleCategoryByID)
-				vehicleCategoriesGroup.DELETE("/delete/:id", vehicleCategories.DeleteVehicleCategoryByID)
-				vehicleCategoriesGroup.POST("/file_desc/add_list", vehicleCategories.AddListFileByObjectID)
-				vehicleCategoriesGroup.DELETE("/file_desc/delete", vehicleCategories.DeleteListFileByID)
-				vehicleCategoriesGroup.GET("/file_desc/:objectID", vehicleCategories.ListFileByObjectID)
+				authorizedVehicleCategories.POST("/add", vehicleCategories.AddVehicle)
+				authorizedVehicleCategories.GET("/list", vehicleCategories.ListVehicle)
+				authorizedVehicleCategories.PATCH("/update", vehicleCategories.UpdateVehicleCategoryByID)
+				authorizedVehicleCategories.DELETE("/delete/:id", vehicleCategories.DeleteVehicleCategoryByID)
+				authorizedVehicleCategories.POST("/file_desc/add_list", vehicleCategories.AddListFileByObjectID)
+				authorizedVehicleCategories.DELETE("/file_desc/delete", vehicleCategories.DeleteListFileByID)
+				authorizedVehicleCategories.GET("/file_desc/:objectID", vehicleCategories.ListFileByObjectID)
 			}
 		}
 		vehicleGroup := r.Group("/vehicle")
 		{
 			vehicleGroup.GET("/public/list", vehicle.GetVehicles)
 			vehicleGroup.GET("/public/file_desc/:objectID", vehicle.GetListFileVehicleById)
-			vehicleGroup.GET("/public/list/vehicle/:vehicleCategoryID", vehicle.GetVehiclesByVehicleCategoryID)
+			vehicleGroup.GET("/public/list/vehicle/:vehicleCategoryID", vehicle.GetVehiclesByVehicleCategoryIDForPublic)
 			authorizedVehicle := vehicleGroup.Use(auth.Authorization())
 			{
 				authorizedVehicle.POST("/add", vehicle.AddVehicle)

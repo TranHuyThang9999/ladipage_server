@@ -28,6 +28,11 @@ type Vehicle struct {
 	Status   string `gorm:"type:varchar(20);not null"` // available, discontinued...
 	Featured bool   `gorm:"default:false"`             // Xe nổi bật
 	Note     string `gorm:"type:text"`
+	//Trả góp từ
+	HCMRollingPrice   string `gorm:"type:text"` //Giá Lăn bánh HCM
+	HanoiRollingPrice string `gorm:"type:text"` //Giá Lăn bánh Hà Nội
+	InstallmentFrom   string `gorm:"type:text"` //Trả góp từ
+
 }
 
 func (v *Vehicle) TableName() string {

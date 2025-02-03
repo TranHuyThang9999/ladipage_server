@@ -141,3 +141,17 @@ func (u *VehicleController) GetVehiclesByVehicleCategoryID(ctx *gin.Context) {
 	}
 	u.reso.Response(ctx, resp)
 }
+
+func (u *VehicleController) GetVehiclesByVehicleCategoryIDForPublic(ctx *gin.Context) {
+	vehicleCategoryID, ok := u.base.GetParamTypeNumber(ctx, "vehicleCategoryID")
+	if !ok {
+		return
+	}
+	resp, err := u.vehicle.GetVehiclesByVehicleCategoryIDForPublic(ctx, vehicleCategoryID)
+	if err != nil {
+		u.reso.Error(ctx, err)
+		return
+	}
+
+	u.reso.Response(ctx, resp)
+}

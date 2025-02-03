@@ -88,3 +88,9 @@ func (f *fileDescRepository) DeleteListFileByObjectID(ctx context.Context, fileI
 	}
 	return nil
 }
+
+func (r *fileDescRepository) ListByObjectIDs(ctx context.Context, objectIDs []int64) ([]*domain.FileDescriptors, error) {
+	var files []*domain.FileDescriptors
+	err := r.db.DB().WithContext(ctx).Where("object_id IN ?", objectIDs).Find(&files).Error
+	return files, err
+}

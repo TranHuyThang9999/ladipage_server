@@ -177,21 +177,24 @@ func (u *VehicleService) ListVehicle(ctx context.Context) ([]*entities.GetCreate
 		vehicleCategory, exists := categoryMap[v.VehicleCategoryID]
 		if exists {
 			listVehicle = append(listVehicle, &entities.GetCreateVehicles{
-				ID:               v.ID,
-				VehicleCategory:  vehicleCategory.Name,
-				ModelName:        v.ModelName,
-				Variant:          v.Variant,
-				VersionYear:      v.VersionYear,
-				BasePrice:        v.BasePrice,
-				PromotionalPrice: v.PromotionalPrice,
-				Color:            v.Color,
-				Transmission:     v.Transmission,
-				Engine:           v.Engine,
-				FuelType:         v.FuelType,
-				Seating:          v.Seating,
-				Status:           v.Status,
-				Featured:         false,
-				Note:             v.Note,
+				ID:                v.ID,
+				VehicleCategory:   vehicleCategory.Name,
+				ModelName:         v.ModelName,
+				Variant:           v.Variant,
+				VersionYear:       v.VersionYear,
+				BasePrice:         v.BasePrice,
+				PromotionalPrice:  v.PromotionalPrice,
+				Color:             v.Color,
+				Transmission:      v.Transmission,
+				Engine:            v.Engine,
+				FuelType:          v.FuelType,
+				Seating:           v.Seating,
+				Status:            v.Status,
+				Featured:          false,
+				Note:              v.Note,
+				HCMRollingPrice:   v.HCMRollingPrice,
+				HanoiRollingPrice: v.HanoiRollingPrice,
+				InstallmentFrom:   v.InstallmentFrom,
 			})
 		}
 	}
@@ -328,21 +331,112 @@ func (u *VehicleService) GetVehiclesByVehicleCategoryID(ctx context.Context, veh
 		vehicleCategory, exists := categoryMap[v.VehicleCategoryID]
 		if exists {
 			listVehicle = append(listVehicle, &entities.GetCreateVehicles{
-				ID:               v.ID,
-				VehicleCategory:  vehicleCategory.Name,
-				ModelName:        v.ModelName,
-				Variant:          v.Variant,
-				VersionYear:      v.VersionYear,
-				BasePrice:        v.BasePrice,
-				PromotionalPrice: v.PromotionalPrice,
-				Color:            v.Color,
-				Transmission:     v.Transmission,
-				Engine:           v.Engine,
-				FuelType:         v.FuelType,
-				Seating:          v.Seating,
-				Status:           v.Status,
-				Featured:         false,
-				Note:             v.Note,
+				ID:                v.ID,
+				VehicleCategory:   vehicleCategory.Name,
+				ModelName:         v.ModelName,
+				Variant:           v.Variant,
+				VersionYear:       v.VersionYear,
+				BasePrice:         v.BasePrice,
+				PromotionalPrice:  v.PromotionalPrice,
+				Color:             v.Color,
+				Transmission:      v.Transmission,
+				Engine:            v.Engine,
+				FuelType:          v.FuelType,
+				Seating:           v.Seating,
+				Status:            v.Status,
+				Featured:          false,
+				Note:              v.Note,
+				HCMRollingPrice:   v.HCMRollingPrice,
+				HanoiRollingPrice: v.HanoiRollingPrice,
+				InstallmentFrom:   v.InstallmentFrom,
+			})
+		}
+	}
+
+	return listVehicle, nil
+}
+
+func (u *VehicleService) GetVehiclesByVehicleCategoryIDForPublic(ctx context.Context, vehicleCategoryID int64) ([]*entities.GetCreateVehiclesForPublic, *customerrors.CustomError) {
+	// Lấy danh sách vehicles
+	vehicles, err := u.vehicle.GetVehiclesByVehicleCategoryID(ctx, vehicleCategoryID)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	if len(vehicles) == 0 {
+		return []*entities.GetCreateVehiclesForPublic{}, nil
+	}
+
+	// Lấy danh sách vehicle IDs
+	vehicleIDs := make([]int64, 0, len(vehicles))
+	for _, v := range vehicles {
+		vehicleIDs = append(vehicleIDs, v.ID)
+	}
+
+	// Lấy tất cả files cho các vehicles một lần
+	allFiles, err := u.file.ListByObjectIDs(ctx, vehicleIDs) // Giả sử có method này
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	// Tạo map files theo vehicle ID
+	fileMap := make(map[int64][]*string)
+	for _, file := range allFiles {
+		if _, exists := fileMap[file.ObjectID]; !exists {
+			fileMap[file.ObjectID] = make([]*string, 0)
+		}
+		fileMap[file.ObjectID] = append(fileMap[file.ObjectID], &file.Url)
+	}
+
+	// Xử lý categories
+	categoryIDs := make(map[int64]bool)
+	for _, v := range vehicles {
+		categoryIDs[v.VehicleCategoryID] = true
+	}
+
+	categoryIDList := make([]int64, 0, len(categoryIDs))
+	for id := range categoryIDs {
+		categoryIDList = append(categoryIDList, id)
+	}
+
+	vehicleCategories, err := u.vehicleCategory.GetVehicleCategoriesByIDs(ctx, categoryIDList)
+	if err != nil {
+		u.logger.Error("error database", err)
+		return nil, customerrors.ErrDB
+	}
+
+	categoryMap := make(map[int64]*domain.VehicleCategory)
+	for _, category := range vehicleCategories {
+		categoryMap[category.ID] = category
+	}
+
+	// Tạo kết quả cuối cùng
+	listVehicle := make([]*entities.GetCreateVehiclesForPublic, 0, len(vehicles))
+	for _, v := range vehicles {
+		vehicleCategory, exists := categoryMap[v.VehicleCategoryID]
+		if exists {
+			listVehicle = append(listVehicle, &entities.GetCreateVehiclesForPublic{
+				ID:                v.ID,
+				VehicleCategory:   vehicleCategory.Name,
+				ModelName:         v.ModelName,
+				Variant:           v.Variant,
+				VersionYear:       v.VersionYear,
+				BasePrice:         v.BasePrice,
+				PromotionalPrice:  v.PromotionalPrice,
+				Color:             v.Color,
+				Transmission:      v.Transmission,
+				Engine:            v.Engine,
+				FuelType:          v.FuelType,
+				Seating:           v.Seating,
+				Status:            v.Status,
+				Featured:          false,
+				Note:              v.Note,
+				HCMRollingPrice:   v.HCMRollingPrice,
+				HanoiRollingPrice: v.HanoiRollingPrice,
+				InstallmentFrom:   v.InstallmentFrom,
+				Urls:              fileMap[v.ID], // Lấy URLs từ map
 			})
 		}
 	}
